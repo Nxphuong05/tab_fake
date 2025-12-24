@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TABS 2D - Cyber Arena Battle Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a2e 50%, #16213e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        #gameContainer {
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.3), 0 20px 60px rgba(0,0,0,0.4);
+            padding: 20px;
+            width: 100%;
+            max-width: 1400px;
+            border: 2px solid #00ffff;
+        }
+        
+        #gameCanvas {
+            border: 4px solid #00ffff;
+            border-radius: 12px;
+            display: block;
+            cursor: crosshair;
+            image-rendering: pixelated;
+            width: 100%;
+            max-width: 1200px;
+            height: auto;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+        
+        #controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .unit-btn {
+            padding: 10px 15px;
+            border: 3px solid #00ffff;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            font-size: 13px;
+            min-width: 120px;
+            text-align: center;
+            color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+        
+        .unit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+            background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
+        }
+        
+        .unit-btn.selected {
+            background: linear-gradient(135deg, #00ffff 0%, #00cccc 100%);
+            color: #0a0e27;
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+        }
+        
+        .action-btn {
+            padding: 12px 30px;
+            border: 2px solid #00ffff;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #00ffff;
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+        }
+        
+        .action-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.7);
+            background: linear-gradient(135deg, #0f3460 0%, #00ffff 20%, #0f3460 100%);
+        }
+        
+        .action-btn:disabled {
+            background: #1a1a2e;
+            cursor: not-allowed;
+            opacity: 0.5;
+            box-shadow: none;
+        }
+        
+        #info {
+            display: flex;
+            gap: 30px;
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 18px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .team-info {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 3px solid #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+        }
+        
+        .red-info {
+            background: linear-gradient(135deg, #ff0066 0%, #cc0052 100%);
+            color: white;
+            border-color: #ff0066;
+        }
+        
+        .blue-info {
+            background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%);
+            color: white;
+            border-color: #0066ff;
+        }
+        
+        #phase {
+            font-size: 20px;
+            color: #00ffff;
+            font-weight: bold;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            border-radius: 8px;
+            border: 3px solid #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        }
+        
+        .team-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .team-btn {
+            padding: 10px 20px;
+            border: 3px solid #00ffff;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+        
+        .team-btn:hover {
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+        }
+        
+        .team-btn.active {
+            background: linear-gradient(135deg, #00ffff 0%, #00cccc 100%);
+            color: #0a0e27;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+        }
+        
+        .team-btn.red-team {
+            border-color: #ff0066;
+            color: #ff0066;
+        }
+        
+        .team-btn.red-team.active {
+            background: linear-gradient(135deg, #ff0066 0%, #cc0052 100%);
+            color: white;
+            box-shadow: 0 0 30px rgba(255, 0, 102, 0.8);
+        }
+        
+        .team-btn.blue-team {
+            border-color: #0066ff;
+            color: #0066ff;
+        }
+        
+        .team-btn.blue-team.active {
+            background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%);
+            color: white;
+            box-shadow: 0 0 30px rgba(0, 102, 255, 0.8);
+        }
+        
+        #statsModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #statsContent {
+            background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
+            border: 3px solid #00ffff;
+        }
+        
+        #statsContent h2 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        }
+        
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .stats-table th,
+        .stats-table td {
+            padding: 10px;
+            border: 2px solid #00ffff;
+            text-align: center;
+            color: #00ffff;
+        }
+        
+        .stats-table th {
+            background: linear-gradient(135deg, #00ffff 0%, #00cccc 100%);
+            color: #0a0e27;
+            font-weight: bold;
+        }
+        
+        .stats-table tr:nth-child(even) {
+            background: rgba(0, 255, 255, 0.1);
+        }
+        
+        .close-btn {
+            background: linear-gradient(135deg, #ff0066 0%, #cc0052 100%);
+            color: white;
+            border: 2px solid #ff0066;
+            padding: 10px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            display: block;
+            margin: 20px auto 0;
+            box-shadow: 0 0 20px rgba(255, 0, 102, 0.5);
+        }
+        
+        .close-btn:hover {
+            background: linear-gradient(135deg, #cc0052 0%, #ff0066 100%);
+            box-shadow: 0 0 30px rgba(255, 0, 102, 0.8);
+        }
+        
+        #winnerOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        #winnerText {
+            font-size: 80px;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 0 0 30px #00ffff, 0 0 60px #00ffff, 0 0 90px #00ffff;
+            animation: pulse 2s infinite;
+            text-align: center;
+        }
+        
+        #winnerSubtext {
+            font-size: 30px;
+            color: #ffffff;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="1200" height="700"></canvas>
+        <div id="controls">
+            <div id="phase">Đặt quân tự do</div>
+            <div class="team-selector">
+                <span style="color: #00ffff; font-weight: bold;">Đội:</span>
+                <button class="team-btn red-team active" id="redTeamBtn">🔴 ĐỎ</button>
+                <button class="team-btn blue-team" id="blueTeamBtn">🔵 XANH</button>
+            </div>
+            <button class="action-btn" id="startBtn">▶ BẮT ĐẦU CHIẾN ĐẤU</button>
+            <button class="action-btn" id="saveBtn">💾 LƯU ĐỘI HÌNH</button>
+            <button class="action-btn" id="loadBtn">📂 TẢI ĐỘI HÌNH</button>
+            <button class="action-btn" id="resetBtn">↺ CHƠI LẠI</button>
+            <button class="action-btn" id="statsBtn">📊 THÔNG SỐ</button>
+        </div>
+        <div id="controls">
+            <div class="unit-btn" data-type="swordsman">⚔️ Kiếm sĩ<br>(50)</div>
+            <div class="unit-btn" data-type="spearman">🔱 Giáo binh<br>(60)</div>
+            <div class="unit-btn" data-type="archer">🏹 Cung thủ<br>(70)</div>
+            <div class="unit-btn" data-type="tank">🛡️ Khiên binh<br>(80)</div>
+            <div class="unit-btn" data-type="crossbowman">🎯 Nỏ thủ<br>(80)</div>
+            <div class="unit-btn" data-type="berserker">🪓 Chiến binh<br>(85)</div>
+        </div>
+        <div id="controls">
+            <div class="unit-btn" data-type="knight">🐴 Kỵ sĩ<br>(90)</div>
+            <div class="unit-btn" data-type="musketeer">🔫 Súng thủ<br>(95)</div>
+            <div class="unit-btn" data-type="mage">🔮 Pháp sư<br>(100)</div>
+            <div class="unit-btn" data-type="healer">💚 Mục sư<br>(110)</div>
+            <div class="unit-btn" data-type="ninja">🥷 Ninja<br>(120)</div>
+            <div class="unit-btn" data-type="giant">👹 Khổng lồ<br>(150)</div>
+        </div>
+        <div id="info">
+            <div class="team-info red-info">
+                <span id="redMoney">💰 Đỏ: 0</span> | 
+                <span id="redUnits">👥: 0</span>
+            </div>
+            <div class="team-info blue-info">
+                <span id="blueMoney">💰 Xanh: 0</span> | 
+                <span id="blueUnits">👥: 0</span>
+            </div>
+        </div>
+    </div>
+    
+    <div id="statsModal">
+        <div id="statsContent">
+            <h2>📊 BẢNG THÔNG SỐ CÁC LOẠI LÍNH</h2>
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Tên</th>
+                        <th>Giá</th>
+                        <th>HP</th>
+                        <th>Sát thương</th>
+                        <th>Tốc độ</th>
+                        <th>Tầm đánh</th>
+                        <th>Tốc độ đánh</th>
+                    </tr>
+                </thead>
+                <tbody id="statsTableBody"></tbody>
+            </table>
+            <button class="close-btn" id="closeStatsBtn">ĐÓNG</button>
+        </div>
+    </div>
+    
+    <div id="winnerOverlay">
+        <div>
+            <div id="winnerText"></div>
+            <div id="winnerSubtext">Click để tiếp tục</div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+        
+        let gamePhase = 'placing';
+        let selectedUnitType = null;
+        let selectedTeam = 'red';
+        let units = [];
+        let projectiles = [];
+        let particles = [];
+        let unitHistory = [];
+        let savedFormations = [];
+        let currentFormationIndex = -1;
+        
+        let cameraZoom = 1;
+        let cameraX = 0;
+        let cameraY = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        const teamMoney = { red: 0, blue: 0 };
+        
+        const unitTypes = {
+            swordsman: { name: 'Kiếm sĩ', cost: 50, hp: 120, damage: 18, speed: 0.9, range: 30, attackSpeed: 45, mass: 1, size: 15, color: '#ff3366', effect: 'sweep' },
+            spearman: { name: 'Giáo binh', cost: 60, hp: 100, damage: 18, speed: 0.8, range: 50, attackSpeed: 55, mass: 1.1, size: 15, color: '#ffaa00', effect: 'pierce' },
+            knight: { name: 'Kỵ sĩ', cost: 90, hp: 200, damage: 28, speed: 1.1, range: 35, attackSpeed: 60, mass: 1.5, size: 18, color: '#cccccc', effect: 'charge' },
+            berserker: { name: 'Chiến binh', cost: 85, hp: 130, damage: 35, speed: 1.0, range: 32, attackSpeed: 40, mass: 1.2, size: 17, color: '#cc0000', effect: 'bleed' },
+            archer: { name: 'Cung thủ', cost: 70, hp: 65, damage: 16, speed: 1.0, range: 200, attackSpeed: 65, mass: 0.8, size: 12, color: '#00ff66', effect: 'pierce' },
+            crossbowman: { name: 'Nỏ thủ', cost: 80, hp: 70, damage: 25, speed: 0.8, range: 220, attackSpeed: 85, mass: 0.9, size: 13, color: '#9966ff', effect: 'pierce' },
+            musketeer: { name: 'Súng thủ', cost: 95, hp: 75, damage: 35, speed: 0.9, range: 250, attackSpeed: 110, mass: 0.85, size: 13, color: '#666666', effect: 'pierce' },
+            tank: { name: 'Khiên binh', cost: 80, hp: 300, damage: 15, speed: 0.6, range: 35, attackSpeed: 65, mass: 2, size: 18, color: '#00ccff', effect: 'none' },
+            mage: { name: 'Pháp sư', cost: 100, hp: 60, damage: 28, speed: 0.8, range: 180, attackSpeed: 100, mass: 0.7, size: 13, color: '#ff00ff', effect: 'splash' },
+            healer: { name: 'Mục sư', cost: 110, hp: 100, damage: 18, speed: 0.7, range: 150, attackSpeed: 120, mass: 0.75, size: 14, healer: true, color: '#00ff00', effect: 'aoe_heal' },
+            ninja: { name: 'Ninja', cost: 120, hp: 95, damage: 38, speed: 1.6, range: 40, attackSpeed: 30, mass: 0.6, size: 13, color: '#330033', effect: 'poison' },
+            giant: { name: 'Khổng lồ', cost: 150, hp: 380, damage: 38, speed: 0.45, range: 55, attackSpeed: 95, mass: 3, size: 28, color: '#ff6600', effect: 'sweep' }
+        };
+        
+        class Unit {
+            constructor(x, y, type, team) {
+                const def = unitTypes[type];
+                Object.assign(this, { x, y, vx: 0, vy: 0, type, team });
+                Object.assign(this, { hp: def.hp, maxHp: def.hp, damage: def.damage, speed: def.speed, range: def.range, attackSpeed: def.attackSpeed, mass: def.mass, size: def.size, color: def.color });
+                this.target = null;
+                this.wobble = Math.random() * Math.PI * 2;
+                this.dead = false;
+                this.deathTimer = 0;
+                this.healer = def.healer || false;
+                this.rotation = 0;
+                this.attacking = false;
+                this.attackAnimation = 0;
+                this.hitStun = 0;
+                this.walkFrame = 0;
+                this.attackTimer = 0;
+                this.effect = def.effect || 'none';
+                this.poisonStacks = 0;
+                this.poisonTimer = 0;
+                this.bleedStacks = 0;
+                this.bleedTimer = 0;
+            }
+            
+            update() {
+                if (this.dead) {
+                    this.deathTimer++;
+                    return this.deathTimer > 30;
+                }
+                
+                // Poison damage over time
+                if (this.poisonStacks > 0) {
+                    this.poisonTimer++;
+                    if (this.poisonTimer >= 30) {
+                        this.takeDamage(5 * this.poisonStacks);
+                        this.poisonStacks--;
+                        this.poisonTimer = 0;
+                        // Green poison particles
+                        for (let i = 0; i < 3; i++) {
+                            particles.push(new Particle(this.x, this.y - this.size, (Math.random() - 0.5) * 2, -Math.random() * 3, '#00ff00', 20));
+                        }
+                    }
+                }
+                
+                // Bleed damage over time
+                if (this.bleedStacks > 0) {
+                    this.bleedTimer++;
+                    if (this.bleedTimer >= 20) {
+                        this.takeDamage(3 * this.bleedStacks);
+                        this.bleedStacks--;
+                        this.bleedTimer = 0;
+                        // Red blood particles
+                        for (let i = 0; i < 3; i++) {
+                            particles.push(new Particle(this.x, this.y - this.size, (Math.random() - 0.5) * 2, -Math.random() * 3, '#ff0000', 20));
+                        }
+                    }
+                }
+                
+                if (this.hitStun > 0) {
+                    this.hitStun--;
+                    this.vx *= 0.9;
+                    this.vy *= 0.9;
+                }
+                
+                if (this.attackAnimation > 0) this.attackAnimation--;
+                if (!this.target || this.target.dead) this.target = this.findTarget();
+                
+                if (this.target && this.hitStun <= 0) {
+                    const dx = this.target.x - this.x;
+                    const dy = this.target.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist > this.range) {
+                        this.vx += (dx / dist) * this.speed * 0.2;
+                        this.vy += (dy / dist) * this.speed * 0.2;
+                        this.attacking = false;
+                        this.walkFrame += 0.2;
+                    } else {
+                        if (this.attackTimer <= 0) {
+                            this.attack(this.target);
+                            this.attackTimer = this.attackSpeed;
+                            this.attacking = true;
+                            this.attackAnimation = 15;
+                        } else {
+                            this.attacking = false;
+                        }
+                    }
+                    this.rotation = Math.atan2(dy, dx);
+                }
+                
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vx *= 0.88;
+                this.vy *= 0.88;
+                
+                if (this.x < this.size) { this.x = this.size; this.vx *= -0.5; }
+                if (this.x > canvas.width - this.size) { this.x = canvas.width - this.size; this.vx *= -0.5; }
+                if (this.y < this.size) { this.y = this.size; this.vy *= -0.5; }
+                if (this.y > canvas.height - this.size) { this.y = canvas.height - this.size; this.vy *= -0.5; }
+                
+                this.wobble += 0.08;
+                this.attackTimer--;
+            }
+            
+            findTarget() {
+                let nearest = null;
+                let minDist = Infinity;
+                
+                if (this.healer) {
+                    // Healer tìm đồng đội bị thương trước
+                    for (const unit of units) {
+                        if (unit.team === this.team && !unit.dead && unit.hp < unit.maxHp && unit !== this) {
+                            const dx = unit.x - this.x;
+                            const dy = unit.y - this.y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+                            if (dist < minDist) { minDist = dist; nearest = unit; }
+                        }
+                    }
+                    
+                    // Nếu không còn đồng đội bị thương, tấn công kẻ địch
+                    if (!nearest) {
+                        for (const unit of units) {
+                            if (unit.team !== this.team && !unit.dead) {
+                                const dx = unit.x - this.x;
+                                const dy = unit.y - this.y;
+                                const dist = Math.sqrt(dx * dx + dy * dy);
+                                if (dist < minDist) { minDist = dist; nearest = unit; }
+                            }
+                        }
+                    }
+                } else {
+                    for (const unit of units) {
+                        if (unit.team !== this.team && !unit.dead) {
+                            const dx = unit.x - this.x;
+                            const dy = unit.y - this.y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+                            if (dist < minDist) { minDist = dist; nearest = unit; }
+                        }
+                    }
+                }
+                return nearest;
+            }
+            
+            attack(target) {
+                const dx = target.x - this.x;
+                const dy = target.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (this.healer && target.team === this.team) {
+                    // AOE Heal - heal nhiều đồng đội gần nhau
+                    const healRadius = 100;
+                    let healed = 0;
+                    for (const unit of units) {
+                        if (unit.team === this.team && !unit.dead && unit.hp < unit.maxHp) {
+                            const udx = unit.x - this.x;
+                            const udy = unit.y - this.y;
+                            const udist = Math.sqrt(udx * udx + udy * udy);
+                            if (udist < healRadius) {
+                                unit.hp = Math.min(unit.hp + this.damage * 2, unit.maxHp);
+                                healed++;
+                                // Heal particles
+                                for (let i = 0; i < 5; i++) {
+                                    particles.push(new Particle(unit.x, unit.y, (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 3 - 2, '#00ff00', 20));
+                                }
+                            }
+                        }
+                    }
+                } else if (this.healer && target.team !== this.team) {
+                    // Healer attacks enemy when no allies need healing
+                    target.takeDamage(this.damage);
+                    const knockback = 5 / target.mass;
+                    target.vx += (dx / dist) * knockback;
+                    target.vy += (dy / dist) * knockback;
+                    target.hitStun = 10;
+                    this.createHitParticles(target.x, target.y);
+                } else if (this.type === 'archer' || this.type === 'mage' || this.type === 'crossbowman' || this.type === 'musketeer') {
+                    const speed = this.type === 'musketeer' ? 10 : 6;
+                    projectiles.push(new Projectile(
+                        this.x + Math.cos(this.rotation) * this.size,
+                        this.y + Math.sin(this.rotation) * this.size,
+                        dx / dist * speed, dy / dist * speed, this.damage, this.team,
+                        this.type === 'mage' ? 'magic' : (this.type === 'musketeer' ? 'bullet' : 'arrow'),
+                        this.effect
+                    ));
+                    this.vx -= (dx / dist) * 2;
+                    this.vy -= (dy / dist) * 2;
+                } else {
+                    // Melee attacks with effects
+                    if (this.effect === 'sweep') {
+                        // Sweep attack - hit multiple enemies in cone
+                        const sweepAngle = Math.PI / 3;
+                        const sweepRange = this.range * 1.5;
+                        let hitCount = 0;
+                        for (const unit of units) {
+                            if (unit.team !== this.team && !unit.dead) {
+                                const udx = unit.x - this.x;
+                                const udy = unit.y - this.y;
+                                const udist = Math.sqrt(udx * udx + udy * udy);
+                                const angle = Math.atan2(udy, udx);
+                                const angleDiff = Math.abs(angle - this.rotation);
+                                
+                                if (udist < sweepRange && angleDiff < sweepAngle) {
+                                    // Damage decreases per hit: 70% -> 50% -> 35%
+                                    const damageMultiplier = hitCount === 0 ? 0.7 : (hitCount === 1 ? 0.5 : 0.35);
+                                    unit.takeDamage(this.damage * damageMultiplier);
+                                    const knockback = 8 / unit.mass;
+                                    unit.vx += (udx / udist) * knockback;
+                                    unit.vy += (udy / udist) * knockback;
+                                    unit.hitStun = 8;
+                                    this.createHitParticles(unit.x, unit.y);
+                                    hitCount++;
+                                }
+                            }
+                        }
+                    } else if (this.effect === 'bleed') {
+                        // Bleed effect
+                        target.takeDamage(this.damage);
+                        target.bleedStacks = Math.min((target.bleedStacks || 0) + 1, 5);
+                        const knockback = 8 / target.mass;
+                        target.vx += (dx / dist) * knockback;
+                        target.vy += (dy / dist) * knockback;
+                        target.hitStun = 10;
+                        // Blood spray
+                        for (let i = 0; i < 12; i++) {
+                            particles.push(new Particle(target.x, target.y, (Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10, '#ff0000', 30));
+                        }
+                    } else if (this.effect === 'poison') {
+                        // Poison effect
+                        target.takeDamage(this.damage);
+                        target.poisonStacks = Math.min((target.poisonStacks || 0) + 1, 5);
+                        const knockback = 6 / target.mass;
+                        target.vx += (dx / dist) * knockback;
+                        target.vy += (dy / dist) * knockback;
+                        target.hitStun = 10;
+                        // Poison cloud
+                        for (let i = 0; i < 10; i++) {
+                            particles.push(new Particle(target.x, target.y, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6, '#00ff00', 25));
+                        }
+                    } else {
+                        // Normal melee
+                        target.takeDamage(this.damage);
+                        const knockback = 8 / target.mass;
+                        target.vx += (dx / dist) * knockback;
+                        target.vy += (dy / dist) * knockback;
+                        target.hitStun = 10;
+                        this.createHitParticles(target.x, target.y);
+                    }
+                    
+                    this.vx -= (dx / dist) * 3;
+                    this.vy -= (dy / dist) * 3;
+                }
+            }
+            
+            takeDamage(damage) {
+                this.hp -= damage;
+                if (this.hp <= 0) {
+                    this.hp = 0;
+                    this.dead = true;
+                    this.createDeathParticles();
+                }
+            }
+            
+            createHitParticles(x, y) {
+                for (let i = 0; i < 10; i++) {
+                    particles.push(new Particle(x, y, (Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8, '#00ffff', 25));
+                }
+            }
+            
+            createDeathParticles() {
+                const color = this.team === 'red' ? '#ff0066' : '#0066ff';
+                for (let i = 0; i < 15; i++) {
+                    particles.push(new Particle(this.x, this.y, (Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10, color, 40));
+                }
+            }
+            
+            drawPixel(x, y, size, color) {
+                ctx.fillStyle = color;
+                ctx.fillRect(Math.floor(x), Math.floor(y), size, size);
+            }
+            
+            draw() {
+                ctx.save();
+                if (this.dead) ctx.globalAlpha = 1 - (this.deathTimer / 30);
+                if (this.hitStun > 0 && this.hitStun % 4 < 2) {
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#00ffff';
+                }
+                
+                ctx.fillStyle = 'rgba(0, 255, 255, 0.2)';
+                ctx.beginPath();
+                ctx.ellipse(this.x, this.y + this.size, this.size * 0.8, this.size * 0.3, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                const pixelSize = 4;
+                const legOffset = Math.floor(Math.sin(this.walkFrame) * 2) * pixelSize;
+                const bodyColor = this.team === 'red' ? '#ff0066' : '#0066ff';
+                const accentColor = this.color;
+                
+                // Legs with detail
+                this.drawPixel(this.x - pixelSize * 2, this.y, pixelSize, bodyColor);
+                this.drawPixel(this.x + pixelSize, this.y, pixelSize, bodyColor);
+                this.drawPixel(this.x - pixelSize * 2, this.y + pixelSize + legOffset, pixelSize, accentColor);
+                this.drawPixel(this.x + pixelSize, this.y + pixelSize - legOffset, pixelSize, accentColor);
+                this.drawPixel(this.x - pixelSize * 2, this.y + pixelSize * 2 + legOffset, pixelSize, '#000000');
+                this.drawPixel(this.x + pixelSize, this.y + pixelSize * 2 - legOffset, pixelSize, '#000000');
+                
+                // Body with armor details per unit type
+                if (this.type === 'tank') {
+                    // Wide armored body
+                    for (let i = -3; i <= 3; i++) {
+                        for (let j = -3; j <= -1; j++) {
+                            this.drawPixel(this.x + i * pixelSize, this.y + j * pixelSize, pixelSize, bodyColor);
+                        }
+                    }
+                    // Armor plates
+                    this.drawPixel(this.x - pixelSize * 3, this.y - pixelSize * 2, pixelSize, accentColor);
+                    this.drawPixel(this.x + pixelSize * 3, this.y - pixelSize * 2, pixelSize, accentColor);
+                    this.drawPixel(this.x, this.y - pixelSize * 3, pixelSize, accentColor);
+                } else if (this.type === 'giant') {
+                    // Huge muscular body
+                    for (let i = -3; i <= 3; i++) {
+                        for (let j = -4; j <= -1; j++) {
+                            this.drawPixel(this.x + i * pixelSize, this.y + j * pixelSize, pixelSize, bodyColor);
+                        }
+                    }
+                    // Shoulder spikes
+                    this.drawPixel(this.x - pixelSize * 4, this.y - pixelSize * 3, pixelSize, accentColor);
+                    this.drawPixel(this.x + pixelSize * 4, this.y - pixelSize * 3, pixelSize, accentColor);
+                } else if (this.type === 'ninja') {
+                    // Slim stealthy body
+                    for (let i = -1; i <= 1; i++) {
+                        for (let j = -3; j <= -1; j++) {
+                            this.drawPixel(this.x + i * pixelSize, this.y + j * pixelSize, pixelSize, '#330033');
+                        }
+                    }
+                    // Ninja scarf
+                    this.drawPixel(this.x - pixelSize * 2, this.y - pixelSize * 3, pixelSize, '#ff0000');
+                    this.drawPixel(this.x + pixelSize * 2, this.y - pixelSize * 3, pixelSize, '#ff0000');
+                } else if (this.type === 'knight') {
+                    // Armored knight
+                    for (let i = -2; i <= 2; i++) {
+                        for (let j = -3; j <= -1; j++) {
+                            this.drawPixel(this.x + i * pixelSize, this.y + j * pixelSize, pixelSize, bodyColor);
+                        }
+                    }
+                    // Knight crest
+                    this.drawPixel(this.x, this.y - pixelSize * 4, pixelSize, '#ffff00');
+                    this.drawPixel(this.x - pixelSize, this.y - pixelSize * 3, pixelSize, accentColor);
+                    this.drawPixel(this.x + pixelSize, this.y - pixelSize * 3, pixelSize, accentColor);
+                } else if (this.type === 'mage') {
+                    // Robed body
+                    for (let i = -2; i <= 2; i++) {
+                        for (let j = -2; j <= -1; j++) {
+                            this.drawPixel(this.x + i * pixelSize, this.y + j * pixelSize, pixelSize, '#330066');
+                        }
+                    }
+                    // Mystical symbols
+                    this.drawPixel(this.x, this.y - pixelSize * 2, pixelSize, '#ff00ff');
+                } else if (this.type === 'healer') {
+                    // Priest robe
+                    for (let i = -2; i <= 2; i++) {
+                        for (let j = -2; j <= -1; j++) {
+                            this.drawPixel(this.x + i * pixelSize, this.y + j * pixelSize, pixelSize, '#ffffff');
+                        }
+                    }
+                    // Cross symbol
+                    this.drawPixel(this.x, this.y - pixelSize * 2, pixelSize, '#00ff00');
+                    this.drawPixel(this.x - pixelSize, this.y - pixelSize * 2, pixelSize, '#00ff00');
+                    this.drawPixel(this.x + pixelSize, this.y - pixelSize * 2, pixelSize, '#00ff00');
+                    this.drawPixel(this.x, this.y - pixelSize * 3, pixelSize, '#00ff00');
+                } else {
+                    // Normal body with chest armor
+                    for (let i = -2; i <= 2; i++) {
+                        for (let j = -2; j <= -1; j++) {
+                            this.drawPixel(this.x + i * pixelSize, this.y + j * pixelSize, pixelSize, bodyColor);
+                        }
+                    }
+                    this.drawPixel(this.x, this.y - pixelSize * 2, pixelSize, accentColor);
+                }
+                
+                // Head - cyber helmet with more detail
+                for (let i = -2; i <= 2; i++) {
+                    for (let j = -5; j <= -4; j++) {
+                        this.drawPixel(this.x + i * pixelSize, this.y + j * pixelSize, pixelSize, accentColor);
+                    }
+                }
+                // Helmet visor
+                this.drawPixel(this.x - pixelSize, this.y - pixelSize * 5, pixelSize, '#000000');
+                this.drawPixel(this.x + pixelSize, this.y - pixelSize * 5, pixelSize, '#000000');
+                
+                // Eyes - glowing cyber eyes
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#00ffff';
+                this.drawPixel(this.x - pixelSize, this.y - pixelSize * 4, pixelSize, '#00ffff');
+                this.drawPixel(this.x + pixelSize, this.y - pixelSize * 4, pixelSize, '#00ffff');
+                ctx.shadowBlur = 0;
+                
+                // Weapon - detailed per type
+                const weaponColor = accentColor;
+                const attackOffset = this.attackAnimation > 0 ? Math.sin(this.attackAnimation * 0.5) * pixelSize * 3 : 0;
+                
+                if (this.type === 'archer' || this.type === 'crossbowman') {
+                    // Bow
+                    this.drawPixel(this.x + pixelSize * 3, this.y - pixelSize * 3, pixelSize, weaponColor);
+                    this.drawPixel(this.x + pixelSize * 4, this.y - pixelSize * 4, pixelSize, weaponColor);
+                    this.drawPixel(this.x + pixelSize * 4, this.y - pixelSize * 2, pixelSize, weaponColor);
+                    if (this.attackAnimation > 0) {
+                        this.drawPixel(this.x + pixelSize * 2, this.y - pixelSize * 3, pixelSize, '#ffffff');
+                    }
+                } else if (this.type === 'mage') {
+                    // Staff with orb
+                    for (let i = 0; i < 4; i++) {
+                        this.drawPixel(this.x + pixelSize * 3, this.y - pixelSize * (2 + i), pixelSize, '#663399');
+                    }
+                    ctx.shadowBlur = this.attackAnimation > 0 ? 20 : 10;
+                    ctx.shadowColor = '#ff00ff';
+                    this.drawPixel(this.x + pixelSize * 3, this.y - pixelSize * 6, pixelSize * 2, '#ff00ff');
+                    ctx.shadowBlur = 0;
+                } else if (this.type === 'healer') {
+                    // Healing staff
+                    for (let i = 0; i < 3; i++) {
+                        this.drawPixel(this.x + pixelSize * 3, this.y - pixelSize * (2 + i), pixelSize, '#996633');
+                    }
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#00ff00';
+                    this.drawPixel(this.x + pixelSize * 3, this.y - pixelSize * 5, pixelSize, '#00ff00');
+                    this.drawPixel(this.x + pixelSize * 2, this.y - pixelSize * 5, pixelSize, '#00ff00');
+                    this.drawPixel(this.x + pixelSize * 4, this.y - pixelSize * 5, pixelSize, '#00ff00');
+                    ctx.shadowBlur = 0;
+                } else if (this.type === 'musketeer') {
+                    // Gun
+                    this.drawPixel(this.x + pixelSize * 3, this.y - pixelSize * 2, pixelSize * 3, weaponColor);
+                    this.drawPixel(this.x + pixelSize * 6, this.y - pixelSize * 2, pixelSize, '#000000');
+                    if (this.attackAnimation > 10) {
+                        ctx.shadowBlur = 15;
+                        ctx.shadowColor = '#ffaa00';
+                        this.drawPixel(this.x + pixelSize * 7, this.y - pixelSize * 2, pixelSize * 2, '#ffaa00');
+                        ctx.shadowBlur = 0;
+                    }
+                } else if (this.type === 'giant') {
+                    // Giant hammer
+                    for (let i = 0; i < 5; i++) {
+                        this.drawPixel(this.x + pixelSize * 4 + attackOffset, this.y - pixelSize * (2 + i), pixelSize, weaponColor);
+                    }
+                    this.drawPixel(this.x + pixelSize * 3 + attackOffset, this.y - pixelSize * 7, pixelSize * 3, weaponColor);
+                    this.drawPixel(this.x + pixelSize * 3 + attackOffset, this.y - pixelSize * 8, pixelSize * 3, '#666666');
+                } else {
+                    // Sword/Spear
+                    for (let i = 0; i < 3; i++) {
+                        this.drawPixel(this.x + pixelSize * (3 + i) + attackOffset, this.y - pixelSize * (2 + i), pixelSize, weaponColor);
+                    }
+                    this.drawPixel(this.x + pixelSize * 6 + attackOffset, this.y - pixelSize * 5, pixelSize, '#ffff00');
+                }
+                
+                ctx.shadowBlur = 0;
+                ctx.restore();
+                
+                // HP bar - neon style
+                if (!this.dead) {
+                    const barWidth = this.size * 3;
+                    const barHeight = 5;
+                    const hpPercent = this.hp / this.maxHp;
+                    
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                    ctx.fillRect(this.x - barWidth / 2, this.y - this.size * 2 - 10, barWidth, barHeight);
+                    
+                    const hpColor = hpPercent > 0.5 ? '#00ff00' : (hpPercent > 0.25 ? '#ffff00' : '#ff0000');
+                    ctx.fillStyle = hpColor;
+                    ctx.fillRect(this.x - barWidth / 2, this.y - this.size * 2 - 10, barWidth * hpPercent, barHeight);
+                    
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = hpColor;
+                    ctx.fillRect(this.x - barWidth / 2, this.y - this.size * 2 - 10, barWidth * hpPercent, barHeight);
+                    
+                    ctx.strokeStyle = '#00ffff';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(this.x - barWidth / 2, this.y - this.size * 2 - 10, barWidth, barHeight);
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+        
+        class Projectile {
+            constructor(x, y, vx, vy, damage, team, type, effect) {
+                Object.assign(this, { x, y, vx, vy, damage, team, type, effect: effect || 'none', life: 100, trail: [], pierced: [] });
+            }
+            
+            update() {
+                this.trail.push({x: this.x, y: this.y});
+                if (this.trail.length > 5) this.trail.shift();
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life--;
+                
+                for (const unit of units) {
+                    if (unit.team !== this.team && !unit.dead && !this.pierced.includes(unit)) {
+                        const dx = unit.x - this.x;
+                        const dy = unit.y - this.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (dist < unit.size) {
+                            unit.takeDamage(this.damage);
+                            const knockback = 3 / unit.mass;
+                            unit.vx += this.vx * knockback * 0.3;
+                            unit.vy += this.vy * knockback * 0.3;
+                            
+                            // Apply effects
+                            if (this.effect === 'splash') {
+                                // Splash damage to nearby enemies
+                                const splashRadius = 80;
+                                let splashCount = 0;
+                                for (const splashUnit of units) {
+                                    if (splashUnit.team !== this.team && !splashUnit.dead && splashUnit !== unit) {
+                                        const sdx = splashUnit.x - this.x;
+                                        const sdy = splashUnit.y - this.y;
+                                        const sdist = Math.sqrt(sdx * sdx + sdy * sdy);
+                                        if (sdist < splashRadius) {
+                                            // Splash damage: 40% of main damage
+                                            splashUnit.takeDamage(this.damage * 0.4);
+                                            for (let i = 0; i < 8; i++) {
+                                                particles.push(new Particle(splashUnit.x, splashUnit.y, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, '#ff00ff', 20));
+                                            }
+                                            splashCount++;
+                                        }
+                                    }
+                                }
+                                // Explosion particles
+                                for (let i = 0; i < 20; i++) {
+                                    particles.push(new Particle(this.x, this.y, (Math.random() - 0.5) * 12, (Math.random() - 0.5) * 12, '#ff00ff', 30));
+                                }
+                                return true;
+                            } else if (this.effect === 'pierce') {
+                                // Pierce through enemies
+                                this.pierced.push(unit);
+                                // Damage reduction per pierce: 100% -> 65% -> 40% -> 25%
+                                const pierceCount = this.pierced.length;
+                                if (pierceCount === 2) {
+                                    this.damage *= 0.65;
+                                } else if (pierceCount === 3) {
+                                    this.damage *= 0.615; // 0.65 * 0.615 ≈ 0.4
+                                } else if (pierceCount >= 4) {
+                                    this.damage *= 0.625; // 0.4 * 0.625 = 0.25
+                                }
+                                
+                                for (let i = 0; i < 8; i++) {
+                                    particles.push(new Particle(this.x, this.y, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, '#00ffff', 15));
+                                }
+                                if (this.pierced.length >= 4) return true; // Max 4 pierce
+                            } else {
+                                for (let i = 0; i < 8; i++) {
+                                    particles.push(new Particle(this.x, this.y, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5,
+                                        this.type === 'magic' ? '#ff00ff' : (this.type === 'bullet' ? '#ffaa00' : '#00ffff'), 15));
+                                }
+                                return true;
+                            }
+                        }
+                    }
+                }
+                
+                return this.life <= 0 || this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height;
+            }
+            
+            draw() {
+                for (let i = 0; i < this.trail.length; i++) {
+                    const alpha = (i + 1) / this.trail.length * 0.5;
+                    ctx.globalAlpha = alpha;
+                    if (this.type === 'magic') {
+                        ctx.fillStyle = '#ff00ff';
+                    } else if (this.type === 'bullet') {
+                        ctx.fillStyle = '#ffaa00';
+                    } else {
+                        ctx.fillStyle = '#00ffff';
+                    }
+                    ctx.fillRect(Math.floor(this.trail[i].x), Math.floor(this.trail[i].y), 4, 4);
+                }
+                ctx.globalAlpha = 1;
+                
+                if (this.type === 'magic') {
+                    ctx.fillStyle = '#ff00ff';
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#ff00ff';
+                } else if (this.type === 'bullet') {
+                    ctx.fillStyle = '#ffaa00';
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = '#ffaa00';
+                } else {
+                    ctx.fillStyle = '#00ffff';
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#00ffff';
+                }
+                
+                ctx.fillRect(Math.floor(this.x), Math.floor(this.y), 6, 6);
+                ctx.shadowBlur = 0;
+            }
+        }
+        
+        class Particle {
+            constructor(x, y, vx, vy, color, life) {
+                Object.assign(this, { x, y, vx, vy, color, life, maxLife: life, size: 3 });
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.3;
+                this.vx *= 0.98;
+                this.vy *= 0.98;
+                this.life--;
+                return this.life <= 0;
+            }
+            
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.life / this.maxLife;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = this.color;
+                ctx.fillRect(Math.floor(this.x), Math.floor(this.y), this.size, this.size);
+                ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1;
+            }
+        }
+        
+        function drawArena() {
+            // Dark cyber background
+            const gradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, canvas.width/2);
+            gradient.addColorStop(0, '#1a1a2e');
+            gradient.addColorStop(1, '#0a0e27');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Grid lines - cyber style
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+            
+            // Roman arena architecture - cyber style
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const arenaRadius = Math.min(canvas.width, canvas.height) * 0.4;
+            
+            // Outer arena circle - neon
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 3;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#00ffff';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, arenaRadius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            
+            // Inner circle
+            ctx.strokeStyle = '#ff0066';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ff0066';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, arenaRadius * 0.7, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            
+            // Pillars - Roman style but cyber
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const px = centerX + Math.cos(angle) * arenaRadius * 1.1;
+                const py = centerY + Math.sin(angle) * arenaRadius * 1.1;
+                
+                ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
+                ctx.fillRect(px - 10, py - 20, 20, 40);
+                
+                ctx.strokeStyle = '#00ffff';
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#00ffff';
+                ctx.strokeRect(px - 10, py - 20, 20, 40);
+                ctx.shadowBlur = 0;
+            }
+            
+            // Center emblem
+            ctx.strokeStyle = '#ffff00';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ffff00';
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY - 20);
+            ctx.lineTo(centerX + 15, centerY + 10);
+            ctx.lineTo(centerX - 15, centerY + 10);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+        
+        function populateStatsTable() {
+            const tbody = document.getElementById('statsTableBody');
+            tbody.innerHTML = '';
+            for (const [key, unit] of Object.entries(unitTypes)) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td><strong>${unit.name}</strong></td><td>${unit.cost}</td><td>${unit.hp}</td><td>${unit.damage}</td><td>${unit.speed.toFixed(1)}</td><td>${unit.range}</td><td>${unit.attackSpeed}</td>`;
+                tbody.appendChild(row);
+            }
+        }
+        
+        document.getElementById('statsBtn').addEventListener('click', () => {
+            populateStatsTable();
+            document.getElementById('statsModal').style.display = 'flex';
+        });
+        
+        document.getElementById('closeStatsBtn').addEventListener('click', () => {
+            document.getElementById('statsModal').style.display = 'none';
+        });
+        
+        document.getElementById('statsModal').addEventListener('click', (e) => {
+            if (e.target.id === 'statsModal') document.getElementById('statsModal').style.display = 'none';
+        });
+        
+        canvas.addEventListener('click', (e) => {
+            if (gamePhase === 'placing') {
+                if (!selectedUnitType) return;
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const mouseX = (e.clientX - rect.left) * scaleX;
+                const mouseY = (e.clientY - rect.top) * scaleY;
+                
+                // Convert to world coordinates
+                const x = (mouseX - canvas.width / 2) / cameraZoom - cameraX + canvas.width / 2;
+                const y = (mouseY - canvas.height / 2) / cameraZoom - cameraY + canvas.height / 2;
+                
+                const cost = unitTypes[selectedUnitType].cost;
+                const newUnit = new Unit(x, y, selectedUnitType, selectedTeam);
+                units.push(newUnit);
+                unitHistory.push({action: 'add', unit: newUnit, team: selectedTeam, cost: cost});
+                teamMoney[selectedTeam] += cost;
+                updateUI();
+            }
+        });
+        
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            if (gamePhase === 'placing') {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const mouseX = (e.clientX - rect.left) * scaleX;
+                const mouseY = (e.clientY - rect.top) * scaleY;
+                
+                const x = (mouseX - canvas.width / 2) / cameraZoom - cameraX + canvas.width / 2;
+                const y = (mouseY - canvas.height / 2) / cameraZoom - cameraY + canvas.height / 2;
+                
+                // Find unit to delete
+                for (let i = units.length - 1; i >= 0; i--) {
+                    const unit = units[i];
+                    const dx = unit.x - x;
+                    const dy = unit.y - y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < unit.size * 2) {
+                        const cost = unitTypes[unit.type].cost;
+                        unitHistory.push({action: 'remove', unit: unit, team: unit.team, cost: cost});
+                        teamMoney[unit.team] -= cost;
+                        units.splice(i, 1);
+                        updateUI();
+                        break;
+                    }
+                }
+            }
+        });
+        
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.button === 1 || (e.button === 0 && e.ctrlKey)) {
+                isDragging = true;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+                canvas.style.cursor = 'grabbing';
+            }
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const dx = (e.clientX - dragStartX) * scaleX;
+                const dy = (e.clientY - dragStartY) * scaleY;
+                cameraX += dx / cameraZoom;
+                cameraY += dy / cameraZoom;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+            }
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+            canvas.style.cursor = 'crosshair';
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+            canvas.style.cursor = 'crosshair';
+        });
+        
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomSpeed = 0.1;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mouseX = (e.clientX - rect.left) * scaleX;
+            const mouseY = (e.clientY - rect.top) * scaleY;
+            
+            // World position before zoom
+            const worldX = (mouseX - canvas.width / 2) / cameraZoom - cameraX + canvas.width / 2;
+            const worldY = (mouseY - canvas.height / 2) / cameraZoom - cameraY + canvas.height / 2;
+            
+            const oldZoom = cameraZoom;
+            if (e.deltaY < 0) {
+                cameraZoom = Math.min(cameraZoom + zoomSpeed, 3);
+            } else {
+                cameraZoom = Math.max(cameraZoom - zoomSpeed, 0.5);
+            }
+            
+            // Adjust camera to keep mouse position stable
+            cameraX = (mouseX - canvas.width / 2) / cameraZoom - worldX + canvas.width / 2;
+            cameraY = (mouseY - canvas.height / 2) / cameraZoom - worldY + canvas.height / 2;
+        });
+        
+        document.getElementById('redTeamBtn').addEventListener('click', () => {
+            selectedTeam = 'red';
+            document.getElementById('redTeamBtn').classList.add('active');
+            document.getElementById('blueTeamBtn').classList.remove('active');
+        });
+        
+        document.getElementById('blueTeamBtn').addEventListener('click', () => {
+            selectedTeam = 'blue';
+            document.getElementById('blueTeamBtn').classList.add('active');
+            document.getElementById('redTeamBtn').classList.remove('active');
+        });
+        
+        document.querySelectorAll('.unit-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedUnitType = btn.dataset.type;
+            });
+        });
+        
+        document.getElementById('startBtn').addEventListener('click', () => {
+            if (gamePhase === 'placing') {
+                // Auto save current formation before battle
+                saveCurrentFormation();
+                gamePhase = 'battle';
+                updateUI();
+            }
+        });
+        
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            if (gamePhase === 'placing') {
+                saveCurrentFormation();
+                alert('✅ Đã lưu đội hình!');
+            }
+        });
+        
+        document.getElementById('loadBtn').addEventListener('click', () => {
+            if (gamePhase === 'placing' && savedFormations.length > 0) {
+                currentFormationIndex = (currentFormationIndex + 1) % savedFormations.length;
+                loadFormation(currentFormationIndex);
+                alert(`📂 Đã tải đội hình ${currentFormationIndex + 1}/${savedFormations.length}`);
+            } else if (savedFormations.length === 0) {
+                alert('⚠️ Chưa có đội hình nào được lưu!');
+            }
+        });
+        
+        function saveCurrentFormation() {
+            if (units.length === 0) return;
+            
+            const formation = {
+                units: units.map(u => ({
+                    x: u.x,
+                    y: u.y,
+                    type: u.type,
+                    team: u.team
+                })),
+                money: {
+                    red: teamMoney.red,
+                    blue: teamMoney.blue
+                },
+                timestamp: Date.now()
+            };
+            
+            savedFormations.push(formation);
+            currentFormationIndex = savedFormations.length - 1;
+        }
+        
+        function loadFormation(index) {
+            if (index < 0 || index >= savedFormations.length) return;
+            
+            const formation = savedFormations[index];
+            
+            // Clear current units
+            units = [];
+            teamMoney.red = 0;
+            teamMoney.blue = 0;
+            
+            // Load saved units
+            formation.units.forEach(unitData => {
+                const newUnit = new Unit(unitData.x, unitData.y, unitData.type, unitData.team);
+                units.push(newUnit);
+            });
+            
+            // Restore money
+            teamMoney.red = formation.money.red;
+            teamMoney.blue = formation.money.blue;
+            
+            updateUI();
+        }
+        
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            // Don't clear saved formations, only reset current battle
+            units = [];
+            projectiles = [];
+            particles = [];
+            unitHistory = [];
+            gamePhase = 'placing';
+            selectedUnitType = null;
+            selectedTeam = 'red';
+            teamMoney.red = 0;
+            teamMoney.blue = 0;
+            cameraZoom = 1;
+            cameraX = 0;
+            cameraY = 0;
+            document.getElementById('redTeamBtn').classList.add('active');
+            document.getElementById('blueTeamBtn').classList.remove('active');
+            document.getElementById('winnerOverlay').style.display = 'none';
+            document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('selected'));
+            updateUI();
+        });
+        
+        document.getElementById('winnerOverlay').addEventListener('click', () => {
+            document.getElementById('winnerOverlay').style.display = 'none';
+        });
+        
+        function updateUI() {
+            const phaseText = {
+                placing: 'Đặt quân tự do',
+                battle: '⚔️ CHIẾN ĐẤU ⚔️',
+                ended: 'Kết Thúc'
+            };
+            
+            document.getElementById('phase').textContent = phaseText[gamePhase];
+            document.getElementById('redMoney').textContent = '💰 Đỏ: ' + teamMoney.red;
+            document.getElementById('blueMoney').textContent = '💰 Xanh: ' + teamMoney.blue;
+            
+            const redCount = units.filter(u => u.team === 'red' && !u.dead).length;
+            const blueCount = units.filter(u => u.team === 'blue' && !u.dead).length;
+            
+            document.getElementById('redUnits').textContent = '👥: ' + redCount;
+            document.getElementById('blueUnits').textContent = '👥: ' + blueCount;
+            
+            const startBtn = document.getElementById('startBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const loadBtn = document.getElementById('loadBtn');
+            
+            if (gamePhase === 'placing') {
+                startBtn.textContent = '▶ BẮT ĐẦU CHIẾN ĐẤU';
+                startBtn.disabled = units.length === 0;
+                saveBtn.disabled = units.length === 0;
+                loadBtn.disabled = savedFormations.length === 0;
+                loadBtn.textContent = savedFormations.length > 0 
+                    ? `📂 TẢI ĐỘI HÌNH (${savedFormations.length})` 
+                    : '📂 TẢI ĐỘI HÌNH';
+            } else {
+                startBtn.disabled = true;
+                saveBtn.disabled = true;
+                loadBtn.disabled = true;
+            }
+        }
+        
+        function gameLoop() {
+            // Clear entire canvas first
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.scale(cameraZoom, cameraZoom);
+            ctx.translate(-canvas.width / 2 + cameraX, -canvas.height / 2 + cameraY);
+            
+            drawArena();
+            
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([15, 15]);
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00ffff';
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.shadowBlur = 0;
+            
+            if (gamePhase === 'placing') {
+                ctx.fillStyle = 'rgba(255, 0, 102, 0.1)';
+                ctx.fillRect(0, 0, canvas.width / 2, canvas.height);
+                ctx.fillStyle = 'rgba(0, 102, 255, 0.1)';
+                ctx.fillRect(canvas.width / 2, 0, canvas.width / 2, canvas.height);
+            }
+            
+            if (gamePhase === 'battle') {
+                units = units.filter(unit => !unit.update());
+                
+                for (let i = 0; i < units.length; i++) {
+                    for (let j = i + 1; j < units.length; j++) {
+                        const u1 = units[i];
+                        const u2 = units[j];
+                        if (u1.dead || u2.dead) continue;
+                        
+                        const dx = u2.x - u1.x;
+                        const dy = u2.y - u1.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        const minDist = u1.size + u2.size;
+                        
+                        if (dist < minDist) {
+                            const overlap = minDist - dist;
+                            const pushX = (dx / dist) * overlap * 0.5;
+                            const pushY = (dy / dist) * overlap * 0.5;
+                            
+                            u1.x -= pushX;
+                            u1.y -= pushY;
+                            u2.x += pushX;
+                            u2.y += pushY;
+                            u1.vx -= pushX * 0.3;
+                            u1.vy -= pushY * 0.3;
+                            u2.vx += pushX * 0.3;
+                            u2.vy += pushY * 0.3;
+                        }
+                    }
+                }
+                
+                projectiles = projectiles.filter(p => !p.update());
+                particles = particles.filter(p => !p.update());
+                
+                const redAlive = units.filter(u => u.team === 'red' && !u.dead).length;
+                const blueAlive = units.filter(u => u.team === 'blue' && !u.dead).length;
+                
+                if (redAlive === 0 && blueAlive > 0) {
+                    gamePhase = 'ended';
+                    showWinner('🎉 XANH THẮNG! 🎉', '#0066ff');
+                } else if (blueAlive === 0 && redAlive > 0) {
+                    gamePhase = 'ended';
+                    showWinner('🎉 ĐỎ THẮNG! 🎉', '#ff0066');
+                } else if (redAlive === 0 && blueAlive === 0) {
+                    gamePhase = 'ended';
+                    showWinner('⚔️ HÒA! ⚔️', '#ffff00');
+                }
+            }
+            
+            particles.forEach(p => p.draw());
+            projectiles.forEach(p => p.draw());
+            units.forEach(u => u.draw());
+            
+            ctx.restore();
+            
+            updateUI();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function showWinner(text, color) {
+            const overlay = document.getElementById('winnerOverlay');
+            const winnerText = document.getElementById('winnerText');
+            winnerText.textContent = text;
+            winnerText.style.color = color;
+            winnerText.style.textShadow = `0 0 30px ${color}, 0 0 60px ${color}, 0 0 90px ${color}`;
+            overlay.style.display = 'flex';
+        }
+        
+        updateUI();
+        gameLoop();
+    </script>
+</body>
+</html>
